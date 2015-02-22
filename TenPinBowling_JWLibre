@@ -1,0 +1,268 @@
+scores = {}
+
+def names_input():
+	
+	print "Type in each player's name one-by-one. Up to six players can paticipate. If fewer than six players are involved, simply press enter after all players have been submitted."
+	
+	for i in range(0,6):
+		name = raw_input("Type in a name: ")
+		
+		if name == "":
+			break
+		else:
+			scores[name] = []
+
+
+
+def print_scorecard(scores, frame):
+	names = scores.keys()
+	for name in names:
+		print "\t", name
+		print "\t------"
+		
+		for i in range(0, frame):
+			print "\t", scores[name][i][0][0], "|", scores[name][i][0][1]
+			print "\t", scores[name][i][1]
+			print "\t-----"
+		
+		print
+
+
+
+def strike(scores, frame, player):
+	if scores[player][frame][0][0] == 10:
+		strike = True
+	
+	else:
+		strike = False
+	
+	return strike
+
+
+
+	
+def spare(scores, frame, player):
+	if scores[player][frame][0][0] != 10 and scores[player][frame][0][0] + scores[player][frame][0][1] == 10:
+		spare = True
+	
+	else:
+		spare = False
+	
+	return spare
+
+
+
+
+def turn(player, frame):	
+
+# 1. Inputting the ball values. There will be up to 2 balls for frames 0-9 and 2-3 balls for frame 10.
+
+	if frame in range(1,10): # frames 1-9 taken care of here.
+		print "frame =", frame
+		print "It's", player, "\'s turn to play."
+	
+		b1 = None
+		b2 = None
+	
+		while b1 == None:
+			try: 
+				b1 = int(raw_input("Type in the score from the first ball: "))
+			except:
+				print "Invalid input. Please try again."
+			if b1 > 10 or b1 < 0:
+				print "Value must be between 0 and 10. Please try again."
+				b1 = None
+
+		if b1 == 10:
+			b2 = 0
+			print "Strike!"
+			frame_score = 0 # i.e. don't start calculating score yet if it's a strike.
+
+		else:
+			while b2 == None:
+				try:
+					b2 = int(raw_input("Type in the score from the second ball: "))
+				except:
+					print "Invalid input. Please try again."
+				if b2 > 10:
+					print "Invalid input. Please try again."
+					b2 = None
+				elif b2 < 0:
+					print "Invalid input. Please try again."
+					b2 = None
+				elif b1 + b2 > 10:
+					print "Invalid input. Please try again."
+					b2 = None
+	
+			if b1 + b2 == 10:
+				print "Spare!"
+				frame_score = 0 # i.e. don't start calculating score yet if it's a spare
+			else:
+				frame_score = b1 + b2
+			
+		# the scores for frame 1 are calculated as above and placed into the scores dictionary:
+		scores[player].append([(b1,b2),frame_score])
+	
+	elif frame == 10: # Balls for frame 10 input here.
+		print "Final frame!"
+		print "It's", player, "\'s turn to play."
+		
+		b1 = None
+		b2 = None
+		b3 = None
+
+		while b1 == None:
+			try: 
+				b1 = int(raw_input("Type in the score from the first ball: "))
+			except:
+				print "Invalid input. Please try again."
+			if b1 > 10 or b1 < 0:
+				print "Value must be between 0 and 10. Please try again."
+				b1 = None
+
+		
+		while b2 == None:
+			try: 
+				b2 = int(raw_input("Type in the score from the second ball: "))
+			except:
+				print "Invalid input. Please try again."
+			if b1 == 10 or b1 == 0: # i.e. if either a strike or gutterball is scored in b1 there'll be 10 pins for b2
+				if b2 > 10 or b2 < 0:
+					print "Value must be between 0 and 10. Please try again."
+					b2 = None
+			elif b1 > 0 and b1 < 10: # but if b1 knocks some pins down there's 10-b1 left for b2 
+				if b2 < 0 or b2 > 10 or b1 + b2 > 10:
+					print "Invalid input. Please try again."
+					b2 = None
+		
+		if b1 == 10 or b1 + b2 == 10: # i.e. if either b1 was a strike or b1 with b2 was a spare we'll need b3
+			while b3 == None:
+				try: 
+					b3 = int(raw_input("Type in the score from the third ball: "))
+				except:
+					print "Invalid input. Please try again."
+				if b1 == 10: # i.e. if strike on b1 there'll be 10 pins for b2 + b3
+					if b2 == 10 or b2 == 0: # if strike or gutterball on b2 there'll be 10 pins for b3
+						if b3 > 10 or b3 < 0:
+							print "Value must be between 0 and 10. Please try again."
+							b3 = None
+					elif b2 > 0 and b2 < 10: # if strike on b1 but incomplete b2 there'll be pins remaining for b3
+						if b3 < 0 or b3 > 10 or b2 + b3 > 10:
+							print "Invalid input. Please try again."
+							b3 = None
+		
+		else:
+			b3 = 0
+		
+		frame_score = b1 + b2 + b3 
+#(NB it doesn't actually matter what we put here for frame_score, as long as it's an integer, since it's just an integer placeholder that won't show up on the scorecard because it will be overwritten.)
+		
+		scores[player].append([(b1,b2,b3),frame_score]
+
+# 2. Calculating the scores
+
+	if frame == 2: # frame 1 has already been taken care of when the ball values are chosen.
+	
+# due to indexing, frame-1 refers to present frame, frame-2 refers to previous frame, etc.
+
+		if strike(scores, frame-1, player) == False and spare(scores, frame-1, player) == False: 
+			if strike(scores, frame-2, player) == False and spare(scores, frame-2, player) == False:
+				scores[player][frame-1][1] = scores[player][frame-2][1] + b1 + b2
+			
+			elif spare(scores, frame-2, player) == True:
+				scores[player][frame-2][1] = 10 + b1
+				scores[player][frame-1][1] = scores[player][frame-2][1] + b1 + b2
+			
+			elif strike(scores, frame-2, player) == True:
+				scores[player][frame-2][1] = 10 + b1 + b2
+				scores[player][frame-1][1] = scores[player][frame-2][1] + b1 + b2
+		
+		if spare(scores, frame-1, player) == True:
+			if strike(scores, frame-2, player) == True:
+				scores[player][frame-2][1] = 10 + b1 + b2 
+		# if both strikes in f1 and f2 we can't work out either's score yet.
+
+	if frame == 3:
+		if strike(scores, frame-3, player) == True:
+			if strike(scores, frame-2, player) == True:
+				scores[player][frame-3][1] = 10 + 10 + b1 
+
+			if spare(scores, frame-1, player) == True:
+				if strike(scores, frame-2, player) == True:
+					scores[player][frame-2][1] = scores[player][frame-3][1] + 10 + b1 + b2
+			
+		
+		if spare(scores, frame-1, player) == False and strike(scores, frame-1, player) == False:
+			
+			if spare(scores, frame-2, player) == False and strike(scores, frame-2, player) == False:
+				scores[player][frame-1][1] = scores[player][frame-2][1] + b1 + b2
+			
+			if spare(scores, frame-2, player) == True:
+				scores[player][frame-2][1] = scores[player][frame-3][1] + 10 + b1
+				scores[player][frame-1][1] = scores[player][frame-2][1] + b1 + b2
+			
+			if strike(scores, frame-2, player) == True:
+				scores[player][frame-2][1] = scores[player][frame-3][1] + 10 + b1 + b2
+				scores[player][frame-1][1] = scores[player][frame-2] + b1 + b2
+		
+		if spare(scores, frame-2, player) == True: 
+			scores[player][frame-2][1] = scores[player][frame-3][1] + 10 + b1
+
+			
+		if spare(scores, frame-1, player) == True: 
+			
+			if strike(scores, frame-2, player) == True:
+				scores[player][frame-2][1] = scores[player][frame-3][1] + 10 + b1 + b2
+	
+	if frame >= 4:
+		if strike(scores, frame-3, player) == True:
+			if strike(scores, frame-2, player) == True:
+				scores[player][frame-3][1] = scores[player][frame-4][1] + 10 + 10 + b1
+			
+			if spare(scores, frame-1, player) == True:
+				if strike(scores, frame-2, player) == True:
+					scores[player][frame-2][1] = scores[player][frame-3][1] + 10 + b1 + b2
+		
+		if spare(scores, frame-2, player) == True: 			scores[player][frame-2][1] = scores[player][frame-3][1] + 10 + b1
+		
+		if strike(scores, frame-1, player) == False and spare(scores, frame-1, player) == False:
+			if strike(scores, frame-2, player) == False and spare(scores, frame-2, player) == False:
+				scores[player][frame-1][1] = scores[player][frame-2][1] + b1 + b2
+			
+			if spare(scores, frame-2, player) == True: 
+				scores[player][frame-2][1] = scores[player][frame-3][1] + 10 + b1
+				scores[player][frame-1][1] = scores[player][frame-2][1] + b1 + b2
+			
+			if strike(scores, frame-2, player) == True:
+				scores[player][frame-2][1] = scores[player][frame-3][1] + 10 + b1 + b2
+				scores[player][frame-1][1] = scores[player][frame-2][1] + b1 + b2
+		
+		
+			
+		if spare(scores, frame-1, player) == True: 
+			if strike(scores, frame-2, player) == True:
+				scores[player][frame-2][1] = scores[player][frame-3][1] + 10 + b1 + b2
+
+	if frame == 10:
+		# sorts out the score two frames ago if there were three consecutive strikes
+		if strike(scores, frame-3, player) == True:
+			if strike(scores, frame-2, player) == True:
+				scores[player][frame-3][1] = scores[player][frame-4][1] + 10 + 10 + b1
+		
+		if strike(scores, frame-2, player) == True: # then calculates previous frame if it was a strike
+			scores[player][frame-2][1] = scores[player][frame-3][1] + 10 + b1 + b2
+		
+		elif spare(scores, frame-2, player) == True: # or calculates previous frame if it was a spare
+			scores[player][frame-2][1] = scores[player][frame-3][1] + 10 + b1
+		
+		scores[player][frame-1][1] = scores[player][frame-2][1] + b1 + b2 + b3
+		 
+# main
+names_input()
+for frame in range (1,11): # edit number of frames here
+	
+	for player in scores.keys():
+		
+		turn(player, frame)
+	
+	print_scorecard(scores, frame)
